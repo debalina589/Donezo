@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
-import TaskInput from '../components/TaskInput';
 import TaskContainer from '../components/TaskContainer';
-import AddTask from '../components/AddTask';
 
 function Home() {
   const [inputs, setInputs] = useState([]);
   const [editId, setEditId] = useState(null);
-  const [editText, setEditText] = useState('');
   const [toggle, setToggle] = useState(false);
+  const [formMode, setFormMode] = useState(null);
     
   useEffect(() => {
     const saveTask = localStorage.getItem('tasks');
@@ -21,32 +19,50 @@ function Home() {
     localStorage.setItem('tasks', JSON.stringify(inputs));
   }, [inputs]);
 
-  function addTodo(newTask) {
+  function addTodo(text) {
+    const newTask = {
+      id: Date.now(),
+      task: text,
+    };
     setInputs((prev) => [...prev, newTask]);
+    setFormMode(null);
+    
   } 
+
   function deleteTodo(id) {
     setInputs((current) => 
       current.filter((input) => input.id !== id));
   }
+
   function startEditing(task){
   setEditId(task.id);
-  setEditText(task.task);
+  setFormMode('edit');
   }
-  function saveEdit(id){
-    if(editText.trim() === "")
-      return;
-    setInputs((prev) => prev.map((task) => task.id ===id ? {...task, task: editText} : task));
+
+  function saveEdit(id, newText){
+    setInputs((prev) => prev.map((task) => task.id ===id ? {...task, task: newText} : task));
     setEditId(null);
-    setEditText("");
+    setFormMode(null);
   }
+
  function cancelEdit(){
   setEditId(null);
-  setEditText("");
+  setFormMode(null);
+ }
+
+ function openAddForm(){
+  setEditId(null);
+  setFormMode("add");
+ }
+
+ function cancelAdd(){
+  setFormMode(null);
  }
 
  function toggleBg(){
         setToggle((prev) => !prev);
     }
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${toggle 
       ? 
@@ -55,17 +71,20 @@ function Home() {
       <Navbar 
       toggle={toggle}
       onToggleBg={toggleBg}/>
-   
+  
       <TaskContainer
         tasks={inputs}
         onDelete={deleteTodo}
-        onAddTodo={addTodo}
+        onSubmit={addTodo}
         editId={editId}
-        editText={editText}
-        setEditText={setEditText}
+        formMode={formMode}
         onStartEdit={startEditing}
-        onEditTodo={saveEdit}
-        onCancelEdit={cancelEdit}/>
+        onEdit={saveEdit}
+        onCancelEdit={cancelEdit}
+        onCancelAdd={cancelAdd}
+        onOpenAddForm={openAddForm}
+        toggle={toggle}/>
+      
     </div>
   );
 }
